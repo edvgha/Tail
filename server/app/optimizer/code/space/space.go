@@ -9,7 +9,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"tail.server/app/optimizer/code/misc"
-	"time"
 )
 
 const lambdaMin float64 = 0.1
@@ -28,48 +27,6 @@ type Space struct {
 	wcMutex              sync.Mutex
 	ExplorationQty       atomic.Uint32
 	LastUpdateQty        atomic.Uint32
-}
-
-func (s *Space) BackgroundTask() {
-	go func() {
-		for {
-			if s.ExplorationQty.Load()-s.LastUpdateQty.Load() >= 100 {
-				s.Learn()
-			}
-			time.Sleep(10 * time.Second)
-		}
-	}()
-}
-
-type Estimation struct {
-	price float64
-	pr    float64
-}
-
-type Estimations []Estimation
-
-func (s *Space) Learn() {
-	estimations := make([]Estimations, len(s.Levels))
-	s.wcMutex.Lock()
-	for i := 0; i < len(s.Levels); i++ {
-		estimations[i] = make([]Estimation, len(s.Levels[i].Buckets))
-		for j := 0; j < len(s.Levels[i].Buckets); j++ {
-			estimations[i][j] = Estimation{
-				price: s.Levels[i].Buckets[j].Lhs + (s.Levels[i].Buckets[j].Rhs-s.Levels[i].Buckets[j].Lhs)/2.0,
-				pr:    s.Levels[i].Buckets[j].Pr,
-			}
-		}
-	}
-	s.wcMutex.Unlock()
-	for i, estimation := range estimations {
-		estimations[i] = learnNonDecreasing(estimation)
-	}
-	// TODO
-}
-
-func learnNonDecreasing(estimations Estimations) Estimations {
-	// TODO
-	return nil
 }
 
 type Level struct {
