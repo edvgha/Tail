@@ -262,14 +262,14 @@ func TestLevel_exploit(t *testing.T) {
 	for i, v := range []float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10} {
 		buckets[i] = &Bucket{Lhs: v, Rhs: v + 1}
 	}
-	winningCurve := []float64{0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.95}
+	wc := []float64{0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.95}
 	type fields struct {
-		Buckets []*Bucket
+		Buckets      []*Bucket
+		WinningCurve []float64
 	}
 	type args struct {
-		floorPrice   float64
-		price        float64
-		winningCurve []float64
+		floorPrice float64
+		price      float64
 	}
 	tests := []struct {
 		name   string
@@ -277,16 +277,17 @@ func TestLevel_exploit(t *testing.T) {
 		args   args
 		want   float64
 	}{
-		{"exploit_0", fields{Buckets: buckets}, args{1.2, 9.8, winningCurve}, 5.5},
+		{"exploit_0", fields{Buckets: buckets, WinningCurve: wc}, args{1.2, 9.8}, 5.5},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			l := &Level{
-				Buckets: tt.fields.Buckets,
+				Buckets:      tt.fields.Buckets,
+				WinningCurve: tt.fields.WinningCurve,
 			}
-			got, err := l.exploit(tt.args.floorPrice, tt.args.price, tt.args.winningCurve)
+			got, err := l.exploit(tt.args.floorPrice, tt.args.price)
 			assert.Nil(t, err)
-			assert.Equalf(t, tt.want, got, "exploit(%v, %v, %v)", tt.args.floorPrice, tt.args.price, tt.args.winningCurve)
+			assert.Equalf(t, tt.want, got, "exploit(%v, %v)", tt.args.floorPrice, tt.args.price)
 		})
 	}
 }

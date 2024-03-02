@@ -53,7 +53,18 @@ func (s *Space) Learn() {
 			estimation[i].pr = prs[i]
 		}
 	}
-	// TODO
+
+	s.wcMutex.Lock()
+	for i := 0; i < len(s.Levels); i++ {
+		for j := 0; j < len(s.Levels[i].Buckets); j++ {
+			s.Levels[i].WinningCurve[j] = estimations[i][j].pr
+			if estimations[i][j].price < s.Levels[i].Buckets[j].Lhs || estimations[i][j].price > s.Levels[i].Buckets[j].Rhs {
+				log.Fatal().Msgf("inconsistency price %f in range [%f, %f]",
+					estimations[i][j].price, s.Levels[i].Buckets[j].Lhs, s.Levels[i].Buckets[j].Rhs)
+			}
+		}
+	}
+	s.wcMutex.Unlock()
 }
 
 func learnNonDecreasing(estimations Estimations) ([]float64, error) {
@@ -69,6 +80,7 @@ func learnNonDecreasing(estimations Estimations) ([]float64, error) {
 func writeToCSV(estimations Estimations) (*os.File, error) {
 	f, err := os.CreateTemp("", "regression.train")
 	if err != nil {
+		log.Error().Msg("failed to create tmp input data csv file")
 		return nil, err
 	}
 
@@ -82,6 +94,7 @@ func writeToCSV(estimations Estimations) (*os.File, error) {
 	}
 	w.WriteAll(estimationsStr)
 	if err := w.Error(); err != nil {
+		log.Error().Msg("failed to write input csv data")
 		return nil, err
 	}
 	return f, nil
@@ -123,13 +136,13 @@ func generateTrainConfig(inData, modelFile string) (*os.File, int, error) {
 		"objective = regression\n" +
 		"metric = l2\n" +
 		"metric_freq = 1\n" +
-		"is_training_metric = true\n" +
+		"is_training_metric = false\n" +
 		"label_column = 0\n" +
-		"max_bin = 255\n" +
 		"data = " + inData + "\n" +
 		"num_trees = 100\n" +
 		"learning_rate = 0.1\n" +
 		"num_leaves = 31\n" +
+		"min_child_samples = 2\n" +
 		"mc = 1\n" +
 		"tree_learner = serial\n" +
 		"is_enable_sparse = true\n" +
