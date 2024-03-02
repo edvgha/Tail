@@ -23,17 +23,17 @@ type Space struct {
 	IsFull               bool
 	mutex                sync.Mutex
 	explorationAlgorithm Algorithm
-	winningCurve         []float64
 	wcMutex              sync.Mutex
 	ExplorationQty       atomic.Uint32
 	LastUpdateQty        atomic.Uint32
 }
 
 type Level struct {
-	Buckets []*Bucket
+	Buckets      []*Bucket
+	WinningCurve []float64
 }
 
-func (l *Level) exploit(floorPrice, price float64, winningCurve []float64) (float64, error) {
+func (l *Level) exploit(floorPrice, price float64) (float64, error) {
 	left := -1
 	right := -1
 	for i := 0; i < len(l.Buckets); i++ {
@@ -63,8 +63,8 @@ func (l *Level) exploit(floorPrice, price float64, winningCurve []float64) (floa
 	recommendationPrice := 0.0
 	for i := left; i <= right; i++ {
 		midPrice := l.Buckets[i].Lhs + (l.Buckets[i].Rhs-l.Buckets[i].Lhs)/2.0
-		if maxSoFar < (price-midPrice)*winningCurve[i] {
-			maxSoFar = (price - midPrice) * winningCurve[i]
+		if maxSoFar < (price-midPrice)*l.WinningCurve[i] {
+			maxSoFar = (price - midPrice) * l.WinningCurve[i]
 			recommendationPrice = midPrice
 		}
 	}
@@ -142,17 +142,12 @@ func NewSpace(contextHash string, minPrice, maxPrice float64, cfg misc.Config) (
 		return nil, misc.DiscountFactorError{Discount: cfg.Discount}
 	}
 
-	winningCurve := make([]float64, cfg.BucketSize)
-	for i := 0; i < cfg.BucketSize; i++ {
-		winningCurve[i] = 0.5
-	}
 	return &Space{
 		ContextHash:          contextHash,
 		Levels:               newLevels(minPrice, maxPrice, cfg),
 		IsFull:               false,
 		mutex:                sync.Mutex{},
 		explorationAlgorithm: InitUniformFlat(contextHash, minPrice, maxPrice, 2*cfg.BucketSize, cfg.DesiredExplorationSpeed),
-		winningCurve:         winningCurve,
 		wcMutex:              sync.Mutex{},
 	}, nil
 }
@@ -183,8 +178,14 @@ func linspace(levelSize int) []float64 {
 }
 
 func newLevel(lambda, minPrice, maxPrice float64, cfg misc.Config) *Level {
+	buckets := newBuckets(lambda, minPrice, maxPrice, cfg)
+	wc := make([]float64, len(buckets))
+	for i := 0; i < len(buckets); i++ {
+		wc[i] = 0.5
+	}
 	return &Level{
-		Buckets: newBuckets(lambda, minPrice, maxPrice, cfg),
+		Buckets:      buckets,
+		WinningCurve: wc,
 	}
 }
 
