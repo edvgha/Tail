@@ -86,6 +86,25 @@ func sendToOptimize(body []byte) (*Response, error) {
 	return resBody, nil
 }
 
+func sendFeedback(body []byte) (*FeedBackResponse, error) {
+	req, err := http.NewRequest(http.MethodPost, "/feedback", bytes.NewBuffer(body))
+	if err != nil {
+		return nil, err
+	}
+	res := httptest.NewRecorder()
+	handler := http.HandlerFunc(feedbackHandler)
+	handler.ServeHTTP(res, req)
+	if res.Code != http.StatusOK {
+		return nil, err
+	}
+	resBody := &FeedBackResponse{}
+	err = json.NewDecoder(res.Body).Decode(resBody)
+	if err != nil {
+		return nil, err
+	}
+	return resBody, nil
+}
+
 func Test_optimizeHandler_no_success(t *testing.T) {
 	type args struct {
 		body []byte
@@ -157,7 +176,8 @@ func Test_optimizeHandler_no_success(t *testing.T) {
 
 func Test_optimizeHandler_success(t *testing.T) {
 	type args struct {
-		body []byte
+		body         []byte
+		bodyFeedback []byte
 	}
 	type expected struct {
 		FloorPrice float64
@@ -170,13 +190,14 @@ func Test_optimizeHandler_success(t *testing.T) {
 	}{
 		{"req_1",
 			args{
-				body: []byte(`{"id":"1234","price": 0.22,"floor_price": 0.01,
+				body: []byte(`{"id":"1001","price": 0.22,"floor_price": 0.01,
 								"data_center": "us-east4gcp",
       							"ext_ad_format": "banner",
       							"app_publisher_id": "1007950",
       							"bundle_id": "1207472156",
       							"tag_id": "BANNER",
       							"device_geo_country": "USA"}`),
+				bodyFeedback: []byte(`{"id":"1001","impression":true,"price":0.2}`),
 			},
 			expected{
 				FloorPrice: 0.01,
@@ -185,13 +206,14 @@ func Test_optimizeHandler_success(t *testing.T) {
 		},
 		{"req_2",
 			args{
-				body: []byte(`{"id":"1234","price": 0.22,"floor_price": 0.01,
+				body: []byte(`{"id":"1002","price": 0.22,"floor_price": 0.01,
 								"data_center": "us-east4gcp",
       							"ext_ad_format": "banner",
       							"app_publisher_id": "1007950",
       							"bundle_id": "1207472156",
       							"tag_id": "BANNER",
       							"device_geo_country": "USA"}`),
+				bodyFeedback: []byte(`{"id":"1002","impression":true,"price":0.2}`),
 			},
 			expected{
 				FloorPrice: 0.01,
@@ -200,13 +222,14 @@ func Test_optimizeHandler_success(t *testing.T) {
 		},
 		{"req_3",
 			args{
-				body: []byte(`{"id":"1234","price": 0.22,"floor_price": 0.01,
+				body: []byte(`{"id":"1003","price": 0.22,"floor_price": 0.01,
 								"data_center": "us-east4gcp",
       							"ext_ad_format": "banner",
       							"app_publisher_id": "1007950",
       							"bundle_id": "1207472156",
       							"tag_id": "BANNER",
       							"device_geo_country": "USA"}`),
+				bodyFeedback: []byte(`{"id":"1003","impression":true,"price":0.2}`),
 			},
 			expected{
 				FloorPrice: 0.01,
@@ -217,10 +240,17 @@ func Test_optimizeHandler_success(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			res, err := sendToOptimize(tt.args.body)
-			time.Sleep(1 * time.Second)
+			time.Sleep(450 * time.Millisecond)
 			assert.Nil(t, err)
 			assert.GreaterOrEqual(t, res.OptimizedPrice, tt.expected.FloorPrice)
 			assert.LessOrEqual(t, res.OptimizedPrice, tt.expected.Price)
+			if res.Status == "explored" {
+				r, err := sendFeedback(tt.args.bodyFeedback)
+				assert.Nil(t, err)
+				assert.True(t, r.Ack)
+			} else {
+				time.Sleep(450 * time.Millisecond)
+			}
 			if res.Status != "exploited" && res.Status != "explored" {
 				t.Error("expected status is 'explored' or 'exploited'")
 			}
