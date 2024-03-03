@@ -26,16 +26,3 @@ type FeedBackRequest struct {
 type FeedBackResponse struct {
 	Ack bool `json:"ack"`
 }
-
-type QuantitiesResponse struct {
-	Price           []float64 `json:"price"`
-	Probability     []float64 `json:"probability"`
-	ExplorationQty  []int     `json:"exploration_qty"`
-	ExploitationQty []int     `json:"exploitation_qty"`
-	UpdateQty       []int     `json:"update_qty"`
-}
-
-type QualityResponse struct {
-	Price   []float64 `json:"price"`
-	Quality []float64 `json:"quality"`
-}
