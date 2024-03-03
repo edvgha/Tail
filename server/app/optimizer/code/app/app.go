@@ -51,6 +51,12 @@ func init() {
 	log.Debug().Msgf("Config %+v", cfg)
 
 	initGlobalVars(cfg)
+
+	// Background periodic task to learn winning curve
+	for _, s := range Spaces {
+		s.BackgroundTask()
+	}
+	log.Debug().Msgf("Initialization is done")
 }
 
 func App() (errReturn error) {

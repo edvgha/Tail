@@ -66,12 +66,13 @@ func (dfe DiscountFactorError) Error() string {
 }
 
 type UnfeasiblePriceError struct {
-	Price   float64
-	Context string
+	Price float64
+	Min   float64
+	Max   float64
 }
 
 func (upe UnfeasiblePriceError) Error() string {
-	return fmt.Sprintf("unfeasible price for %f for the ctx %s", upe.Price, upe.Context)
+	return fmt.Sprintf("unfeasible price %f [%f, %f]", upe.Price, upe.Min, upe.Max)
 }
 
 type FailedToSampleExplorationBucket struct {

@@ -36,6 +36,8 @@ type Level struct {
 func (l *Level) exploit(floorPrice, price float64) (float64, error) {
 	left := -1
 	right := -1
+	min := l.Buckets[0].Lhs
+	max := l.Buckets[len(l.Buckets)-1].Rhs
 	for i := 0; i < len(l.Buckets); i++ {
 		if floorPrice < l.Buckets[i].Rhs && floorPrice > l.Buckets[i].Lhs {
 			left = i
@@ -45,7 +47,7 @@ func (l *Level) exploit(floorPrice, price float64) (float64, error) {
 		}
 	}
 	if left == -1 || right == -1 || left > right {
-		return price, misc.UnfeasiblePriceError{Price: price}
+		return price, misc.UnfeasiblePriceError{Price: price, Min: min, Max: max}
 	}
 	mid := l.Buckets[left].Lhs + (l.Buckets[left].Rhs-l.Buckets[left].Lhs)/2.0
 	if floorPrice > mid {
@@ -56,7 +58,8 @@ func (l *Level) exploit(floorPrice, price float64) (float64, error) {
 		right += 1
 	}
 	if left < 0 || right >= len(l.Buckets) {
-		return price, misc.UnfeasiblePriceError{Price: price}
+		log.Debug().Msgf("out of bucket's range [%d, %d] #buckets %d", left, right, len(l.Buckets))
+		return price, misc.UnfeasiblePriceError{Price: price, Min: min, Max: max}
 	}
 
 	maxSoFar := 0.0
@@ -246,12 +249,14 @@ func LoadSpaces(cfg misc.Config) (map[string]*Space, error) {
 	}
 
 	spaces := make(map[string]*Space)
+	spaceCount := 0
 	for _, s := range spacesDesc {
 		spaces[s.ContextHash], err = NewSpace(s.ContextHash, s.MinPrice, s.MaxPrice, cfg)
 		if err != nil {
 			return nil, err
 		}
+		spaceCount += 1
 	}
-	log.Debug().Msgf("Description of spaces loaded successfully")
+	log.Debug().Msgf("Description of spaces loaded successfully #%d", spaceCount)
 	return spaces, nil
 }
