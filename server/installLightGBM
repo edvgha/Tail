@@ -1,0 +1,13 @@
+#!/bin/bash
+
+sudo apt install aptitude
+sudo aptitude install cmake
+git clone --recursive https://github.com/microsoft/LightGBM
+cd LightGBM
+mkdir build
+cd build
+cmake ..
+make -j4
+sudo make install
+cd ../..
+rm -rf LightGBM
