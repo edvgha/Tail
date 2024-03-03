@@ -9,7 +9,7 @@ import (
 
 func optimize(request *Request) Response {
 	if !validate(request) {
-		log.Debug().Msgf("validation error: rID %s", request.ID)
+		log.Debug().Msgf("validation error: r_id %s", request.ID)
 		return Response{
 			OptimizedPrice: request.Price,
 			Status:         "validation error",

@@ -51,20 +51,17 @@ func InitUniformFlat(context string, minPrice, maxPrice float64, nBins int, desi
 func (uf UniformFlat) Call(floorPrice, price float64) (float64, bool, error) {
 	r, OK := uf.findLeftmost(price)
 	if !OK {
-		log.Debug().Msgf("price: %v, left: %v OK %v", price, r, OK)
-		return 0.0, false, misc.UnfeasiblePriceError{Price: price, Context: uf.context}
+		return 0.0, false, misc.UnfeasiblePriceError{Price: price, Min: uf.bins[0], Max: uf.bins[len(uf.bins)-1]}
 	}
 
 	l, OK := uf.findLeftmost(floorPrice)
 	if !OK {
-		log.Debug().Msgf("floorPrice: %v, left: %v OK %v", floorPrice, l, OK)
-		return 0.0, false, misc.UnfeasiblePriceError{Price: price, Context: uf.context}
+		return 0.0, false, misc.UnfeasiblePriceError{Price: price, Min: uf.bins[0], Max: uf.bins[len(uf.bins)-1]}
 	}
 
 	if r-l < 2 {
 		return 0.0, false, nil
 	}
-
 	bin, OK, err := uf.sampleBin(l, r)
 	if err != nil {
 		return 0.0, false, err
@@ -120,6 +117,7 @@ func (uf UniformFlat) sampleBin(l, r int) (int, bool, error) {
 
 func (uf UniformFlat) findLeftmost(price float64) (int, bool) {
 	if price <= uf.bins[0] || price > uf.bins[len(uf.bins)-1] {
+		log.Debug().Msgf("unfeasible price: %v$, for [%v$, %v$]", price, uf.bins[0], uf.bins[len(uf.bins)-1])
 		return 0, false
 	}
 	return sort.SearchFloat64s(uf.bins, price) - 1, true
