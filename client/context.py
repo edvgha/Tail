@@ -1,4 +1,6 @@
 import json
+import random
+
 import pandas as pd
 
 
@@ -16,16 +18,11 @@ class Context:
         self.load_data()
         self.min_price = self.__get_min_price()
         self.max_price = self.__get_max_price()
+        self.log = None
 
-    def show(self):
-        print("context:")
-        print("\tdf: ", self.dc)
-        print("\tad_format: ", self.ad_format)
-        print("\tpub_id: ", self.pub_id)
-        print("\tbundle_id: ", self.bundle_id)
-        print("\ttag_id: ", self.tag_id)
-        print("\tcc: ", self.cc)
-        print("\thash: ", self.context_hash)
+    def to_string(self) -> str:
+        return (f"context:\n\tdc:{self.dc}\n\tad_format:{self.ad_format}\n\tpub_id:{self.pub_id}\n\t"
+                f"bundle_id:{self.bundle_id}\n\ttag_id:{self.tag_id}\n\tcc:{self.cc}\n\tctx_hash:{self.context_hash}")
 
     def load_data(self):
         data_file_name = ('data/' + self.dc +
@@ -37,10 +34,13 @@ class Context:
             data_file_name += '_' + self.pub_id
         data_file_name = data_file_name.replace(".", "-")
         data_file_name += '.csv'
-        print("data ", data_file_name, " is loading ...")
         self.df = pd.read_csv(data_file_name)
         self.df = self.df.sort_values(by=['timestamp'], ascending=True).reset_index()
-        print(self.df.head())
+
+    def gen_floor_price(self, price: float) -> float:
+        # generate between in the first quarter of the range [min_price, price]
+        d_quarter = (price - self.min_price) / 4.0
+        return random.uniform(self.min_price, self.min_price + d_quarter)
 
     def __get_min_price(self) -> float:
         if self.context_hash not in buckets.keys():

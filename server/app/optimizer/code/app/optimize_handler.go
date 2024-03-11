@@ -50,7 +50,7 @@ func explore(request *Request) (float64, bool, error) {
 
 	newPrice, data, OK, err := space.Explore(request.FloorPrice, request.Price)
 	if err != nil {
-		log.Debug().Msgf("explore ctx: %s price: %f error: %s", context, request.Price, err.Error())
+		log.Debug().Msgf("explore ctx: %s error: %s", context, err.Error())
 		return 0.0, false, err
 	}
 	space.ExplorationQty.Add(1)

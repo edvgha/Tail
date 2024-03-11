@@ -1,3 +1,5 @@
+import logging
+
 from context import Context
 import uuid
 import time
@@ -13,12 +15,12 @@ class BidResponse:
 
 
 class Client:
-    def __init__(self, context: Context, host: str, port: int):
+    def __init__(self, context: Context, host: str, port: int, log: logging.Logger):
         self.context = context
         self.headers = {'Content-Type': 'application/json'}
         self.url = 'http://' + host + ':' + str(port)
         self.last_ts = None
-        self.context.show()
+        self.log = log
 
     def send_bid_request(self):
         price_to_bid, ts = self.context.get_price_in_time()
@@ -28,10 +30,13 @@ class Client:
         self.last_ts = ts
 
         req_id = uuid.uuid4().hex
+        floor_price = self.context.gen_floor_price(price_to_bid)
+        self.log.debug(f"floor_price: {floor_price}")
+        self.log.debug(f"price: {price_to_bid}")
         json_body = {
             "id": str(req_id),
             "price": price_to_bid,
-            "floor_price": self.context.floor_price,
+            "floor_price": floor_price,
             "data_center": self.context.dc,
             "app_publisher_id": self.context.pub_id,
             "bundle_id": self.context.bundle_id,
@@ -42,6 +47,7 @@ class Client:
 
         response = requests.post(url=self.url + '/optimize', json=json_body, headers=self.headers)
         if response.status_code != 200:
+            self.log.debug(f"response.status_code: {response.status_code}")
             return BidResponse()
 
         resp_json = response.json()
@@ -52,6 +58,8 @@ class Client:
                                    price_to_bid=price_to_bid,
                                    optimized_price=optimized_price,
                                    status=status)
+        self.log.debug(f"opt price: {bid_response.optimized_price}")
+        self.log.debug(f"status: {bid_response.status}")
         return bid_response
 
     def send_impression(self, req_id: str, price: float, imp: bool):
@@ -61,7 +69,7 @@ class Client:
                      }
         response = requests.post(url=self.url + '/feedback', json=json_body, headers=self.headers)
         if response.status_code != 200:
-            print("Feedback status code: ", response.status_code)
+            self.log.debug(f"Feedback status code: {response.status_code}")
 
         resp_json = response.json()
         ack = resp_json['ack']
