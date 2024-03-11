@@ -56,7 +56,7 @@ func (uf UniformFlat) Call(floorPrice, price float64) (float64, bool, error) {
 
 	l, OK := uf.findLeftmost(floorPrice)
 	if !OK {
-		return 0.0, false, misc.UnfeasiblePriceError{Price: price, Min: uf.bins[0], Max: uf.bins[len(uf.bins)-1]}
+		return 0.0, false, misc.UnfeasiblePriceError{Price: floorPrice, Min: uf.bins[0], Max: uf.bins[len(uf.bins)-1]}
 	}
 
 	if r-l < 2 {
