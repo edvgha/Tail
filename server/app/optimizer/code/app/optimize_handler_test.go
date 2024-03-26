@@ -25,8 +25,8 @@ func Test_explore(t *testing.T) {
 	//0.1 - 0.3
 	request := &Request{
 		ID:          "123456789",
-		Price:       0.2,
-		FloorPrice:  0.1,
+		Price:       0.4,
+		FloorPrice:  0.2,
 		DC:          "us-east4gcp",
 		PublisherID: "1007950",
 		BundleID:    "1207472156",

@@ -145,7 +145,7 @@ func Test_optimizeHandler_no_success(t *testing.T) {
 			},
 			expected{
 				OptimizedPrice: 1.2,
-				Status:         "unfeasible price 1.200000 [0.004100, 0.301500]",
+				Status:         "unfeasible price 1.200000 [0.018000, 0.600000]",
 			},
 		},
 		{"validation_error",
@@ -190,7 +190,7 @@ func Test_optimizeHandler_success(t *testing.T) {
 	}{
 		{"req_1",
 			args{
-				body: []byte(`{"id":"1001","price": 0.22,"floor_price": 0.01,
+				body: []byte(`{"id":"1001","price": 0.4,"floor_price": 0.2,
 								"data_center": "us-east4gcp",
       							"ext_ad_format": "banner",
       							"app_publisher_id": "1007950",
@@ -200,13 +200,13 @@ func Test_optimizeHandler_success(t *testing.T) {
 				bodyFeedback: []byte(`{"id":"1001","impression":true,"price":0.2}`),
 			},
 			expected{
-				FloorPrice: 0.01,
-				Price:      0.22,
+				FloorPrice: 0.2,
+				Price:      0.4,
 			},
 		},
 		{"req_2",
 			args{
-				body: []byte(`{"id":"1002","price": 0.22,"floor_price": 0.01,
+				body: []byte(`{"id":"1002","price": 0.4,"floor_price": 0.2,
 								"data_center": "us-east4gcp",
       							"ext_ad_format": "banner",
       							"app_publisher_id": "1007950",
@@ -216,13 +216,13 @@ func Test_optimizeHandler_success(t *testing.T) {
 				bodyFeedback: []byte(`{"id":"1002","impression":true,"price":0.2}`),
 			},
 			expected{
-				FloorPrice: 0.01,
-				Price:      0.22,
+				FloorPrice: 0.2,
+				Price:      0.4,
 			},
 		},
 		{"req_3",
 			args{
-				body: []byte(`{"id":"1003","price": 0.22,"floor_price": 0.01,
+				body: []byte(`{"id":"1003","price": 0.4,"floor_price": 0.2,
 								"data_center": "us-east4gcp",
       							"ext_ad_format": "banner",
       							"app_publisher_id": "1007950",
@@ -232,8 +232,8 @@ func Test_optimizeHandler_success(t *testing.T) {
 				bodyFeedback: []byte(`{"id":"1003","impression":true,"price":0.2}`),
 			},
 			expected{
-				FloorPrice: 0.01,
-				Price:      0.22,
+				FloorPrice: 0.2,
+				Price:      0.4,
 			},
 		},
 	}
