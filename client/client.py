@@ -1,8 +1,7 @@
-import logging
-
 from context import Context
 import uuid
 import time
+import logging
 import requests
 
 
@@ -31,8 +30,8 @@ class Client:
 
         req_id = uuid.uuid4().hex
         floor_price = self.context.gen_floor_price(price_to_bid)
-        self.log.debug(f"floor_price: {floor_price}")
-        self.log.debug(f"price: {price_to_bid}")
+        # self.log.debug(f"floor_price: {floor_price}")
+        # self.log.debug(f"price: {price_to_bid}")
         json_body = {
             "id": str(req_id),
             "price": price_to_bid,
@@ -58,8 +57,8 @@ class Client:
                                    price_to_bid=price_to_bid,
                                    optimized_price=optimized_price,
                                    status=status)
-        self.log.debug(f"opt price: {bid_response.optimized_price}")
-        self.log.debug(f"status: {bid_response.status}")
+        # self.log.debug(f"opt price: {bid_response.optimized_price}")
+        # self.log.debug(f"status: {bid_response.status}")
         return bid_response
 
     def send_impression(self, req_id: str, price: float, imp: bool):
