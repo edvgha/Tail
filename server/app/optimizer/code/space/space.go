@@ -33,6 +33,33 @@ type Level struct {
 	WinningCurve []float64
 }
 
+type LevelEstimation struct {
+	Price []float64 `json:"price"`
+	Pr    []float64 `json:"pr"`
+}
+
+type LearnedEstimation struct {
+	Level []LevelEstimation `json:"level"`
+}
+
+func (s *Space) WC() LearnedEstimation {
+	s.wcMutex.Lock()
+	defer s.wcMutex.Unlock()
+
+	learnedEstimation := LearnedEstimation{Level: make([]LevelEstimation, len(s.Levels))}
+	for i := 0; i < len(s.Levels); i++ {
+		learnedEstimation.Level[i] = LevelEstimation{
+			Price: make([]float64, len(s.Levels[i].Buckets)),
+			Pr:    make([]float64, len(s.Levels[i].Buckets)),
+		}
+		for j := 0; j < len(s.Levels[i].Buckets); j++ {
+			learnedEstimation.Level[i].Price[j] = s.Levels[i].Buckets[j].Lhs + (s.Levels[i].Buckets[j].Rhs-s.Levels[i].Buckets[j].Lhs)/2.0
+			learnedEstimation.Level[i].Pr[j] = s.Levels[i].WinningCurve[j]
+		}
+	}
+	return learnedEstimation
+}
+
 func (l *Level) exploit(floorPrice, price float64) (float64, error) {
 	left := -1
 	right := -1

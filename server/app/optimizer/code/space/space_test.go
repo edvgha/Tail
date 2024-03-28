@@ -291,3 +291,36 @@ func TestLevel_exploit(t *testing.T) {
 		})
 	}
 }
+
+func TestSpace_WC(t *testing.T) {
+	s, err := NewSpace("ctxHash", 0.1, 9.9, misc.Config{
+		BufferSize:              100,
+		Discount:                0.25,
+		DesiredExplorationSpeed: 0.2,
+		LogLevel:                "debug",
+		LevelSize:               3,
+		BucketSize:              10,
+		SpaceDescFile:           "file.txt",
+		CacheTTL:                1,
+	})
+	assert.Nil(t, err)
+	le := s.WC()
+	assert.Equal(t, 3, len(le.Level))
+	assert.True(t, reflect.DeepEqual(le.Level[0].Pr, s.Levels[0].WinningCurve))
+	assert.True(t, reflect.DeepEqual(le.Level[1].Pr, s.Levels[1].WinningCurve))
+	assert.True(t, reflect.DeepEqual(le.Level[2].Pr, s.Levels[2].WinningCurve))
+	// -----------------------------------------------------------------------
+	prices := make([]float64, len(s.Levels[0].Buckets))
+	for i := 0; i < len(prices); i++ {
+		prices[i] = s.Levels[0].Buckets[i].Lhs + (s.Levels[0].Buckets[i].Rhs-s.Levels[0].Buckets[i].Lhs)/2.0
+	}
+	assert.True(t, reflect.DeepEqual(le.Level[0].Price, prices))
+	for i := 0; i < len(prices); i++ {
+		prices[i] = s.Levels[1].Buckets[i].Lhs + (s.Levels[1].Buckets[i].Rhs-s.Levels[1].Buckets[i].Lhs)/2.0
+	}
+	assert.True(t, reflect.DeepEqual(le.Level[1].Price, prices))
+	for i := 0; i < len(prices); i++ {
+		prices[i] = s.Levels[2].Buckets[i].Lhs + (s.Levels[2].Buckets[i].Rhs-s.Levels[2].Buckets[i].Lhs)/2.0
+	}
+	assert.True(t, reflect.DeepEqual(le.Level[2].Price, prices))
+}
