@@ -62,6 +62,7 @@ func init() {
 func App() (errReturn error) {
 	http.HandleFunc("/optimize", optimizeHandler)
 	http.HandleFunc("/feedback", feedbackHandler)
+	http.HandleFunc("/space", spaceHandler)
 	log.Debug().Msg("Server listening on :8000")
 	return http.ListenAndServe(":8000", nil)
 }
