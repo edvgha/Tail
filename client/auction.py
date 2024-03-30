@@ -43,7 +43,7 @@ class Auction:
 
     def step(self, price: float) -> bool:
         self.count += 1
-        if self.count % 100 == 0:
+        if self.count % 1000 == 0:
             self.__gen_winning_curve()
         return random.uniform(0, 1) <= self.__win_probability(price)
 

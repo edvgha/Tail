@@ -6,8 +6,9 @@ import (
 )
 
 type item[V any] struct {
-	value  V
-	expiry time.Time
+	value          V
+	expiry         time.Time
+	expireCallBack func(V) bool
 }
 
 func (i item[V]) isExpired() bool {
@@ -25,11 +26,12 @@ func New[K comparable, V any]() *Cache[K, V] {
 	}
 
 	go func() {
-		for range time.Tick(5 * time.Second) {
+		for range time.Tick(1 * time.Second) {
 			c.mu.Lock()
 
 			for key, item := range c.items {
 				if item.isExpired() {
+					item.expireCallBack(item.value)
 					delete(c.items, key)
 				}
 			}
@@ -40,13 +42,14 @@ func New[K comparable, V any]() *Cache[K, V] {
 	return c
 }
 
-func (c *Cache[K, V]) Set(key K, value V, ttl time.Duration) {
+func (c *Cache[K, V]) Set(key K, value V, ttl time.Duration, expireCallBack func(V) bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	c.items[key] = item[V]{
-		value:  value,
-		expiry: time.Now().Add(ttl),
+		value:          value,
+		expiry:         time.Now().Add(ttl),
+		expireCallBack: expireCallBack,
 	}
 }
 
