@@ -2,7 +2,6 @@ package app
 
 import (
 	"encoding/json"
-	"github.com/rs/zerolog/log"
 	"io"
 	"net/http"
 )
@@ -55,7 +54,6 @@ func update(request *FeedBackRequest) FeedBackResponse {
 	}
 
 	space := Spaces[state.ContextHash]
-	log.Debug().Msgf("update: ctx: %s imp: %t", state.ContextHash, request.Impression)
 	space.Update(state, request.Impression)
 	return FeedBackResponse{Ack: true}
 }

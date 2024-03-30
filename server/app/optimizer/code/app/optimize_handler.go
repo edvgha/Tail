@@ -5,6 +5,7 @@ import (
 	"hash/fnv"
 	"strconv"
 	"tail.server/app/optimizer/code/misc"
+	"tail.server/app/optimizer/code/space"
 )
 
 func optimize(request *Request) Response {
@@ -43,23 +44,31 @@ func optimize(request *Request) Response {
 
 func explore(request *Request) (float64, bool, error) {
 	context := contextHash(request)
-	space, exists := Spaces[context]
+	s, exists := Spaces[context]
 	if !exists {
 		return 0.0, false, misc.NoSpaceError{}
 	}
 
-	newPrice, data, OK, err := space.Explore(request.FloorPrice, request.Price)
+	newPrice, data, OK, err := s.Explore(request.FloorPrice, request.Price)
 	if err != nil {
 		log.Debug().Msgf("explore ctx: %s error: %s", context, err.Error())
 		return 0.0, false, err
 	}
-	space.ExplorationQty.Add(1)
+	s.ExplorationQty.Add(1)
 	if !OK {
 		log.Debug().Msgf("explore ctx: %s price: %f NO OK", context, request.Price)
 		return 0.0, false, nil
 	}
 	data.ContextHash = context
-	Cache.Set(request.ID, data, CacheTTL)
+	cb := func(d space.ExploreData) bool {
+		s, exists := Spaces[data.ContextHash]
+		if !exists {
+			return false
+		}
+		s.Update(data, false)
+		return true
+	}
+	Cache.Set(request.ID, data, CacheTTL, cb)
 	// log.Debug().Msgf("explore: %s price: %f new_price: %f", context, request.Price, newPrice)
 	return newPrice, true, nil
 }
