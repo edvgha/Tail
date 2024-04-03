@@ -1,8 +1,11 @@
 package space
 
-import "github.com/rs/zerolog/log"
+import (
+	"time"
+)
 
 func (s *Space) Explore(floorPrice, price float64) (float64, ExploreData, bool, error) {
+	t := time.Now()
 	explorationPrice, OK, err := s.explorationAlgorithm.Call(floorPrice, price)
 	if err != nil {
 		return 0.0, ExploreData{}, false, err
@@ -12,7 +15,7 @@ func (s *Space) Explore(floorPrice, price float64) (float64, ExploreData, bool, 
 	}
 
 	buckets := s.sampleBuckets(explorationPrice)
-	return explorationPrice, ExploreData{s.ContextHash, buckets}, true, nil
+	return explorationPrice, ExploreData{s.ContextHash, buckets, t}, true, nil
 }
 
 func (s *Space) sampleBuckets(price float64) []int {
@@ -26,7 +29,7 @@ func (s *Space) sampleBuckets(price float64) []int {
 func (s *Space) Update(data ExploreData, impression bool) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	log.Debug().Msgf("update: ctx: %s imp: %t", data.ContextHash, impression)
+	s.log.Debug().Msgf("update: ctx: %s imp: %t", data.ContextHash, impression)
 
 	for i := 0; i < len(data.Buckets); i++ {
 		bID := data.Buckets[i]
@@ -34,5 +37,8 @@ func (s *Space) Update(data ExploreData, impression bool) {
 			continue
 		}
 		s.Levels[i].Buckets[bID].Update(impression)
+	}
+	if impression {
+		s.log.Debug().Msgf("ack time %v", time.Since(data.started))
 	}
 }

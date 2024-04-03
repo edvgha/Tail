@@ -1,6 +1,7 @@
 package space
 
 import (
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"sort"
@@ -10,14 +11,14 @@ import (
 
 func Test_writeToCSV(t *testing.T) {
 	estimations := Estimations{Estimation{0.1, 0.2}, Estimation{0.2, 0.3}, Estimation{0.3, 0.4}}
-	f, err := writeToCSV(estimations)
+	f, err := writeToCSV(estimations, zerolog.New(os.Stdout))
 	assert.Nil(t, err)
 	assert.NotNil(t, f)
 	defer os.Remove(f.Name())
 }
 
 func Test_generateTrainConfig(t *testing.T) {
-	f, n, err := generateTrainConfig("in.txt", "model.txt")
+	f, n, err := generateTrainConfig("in.txt", "model.txt", zerolog.New(os.Stdout))
 	defer os.Remove(f.Name())
 	assert.Nil(t, err)
 	assert.Greater(t, n, 0)
@@ -85,7 +86,7 @@ func buildEstimations() Estimations {
 }
 func Test_learnNonDecreasing(t *testing.T) {
 	estimations := buildEstimations()
-	got, err := learnNonDecreasing(estimations)
+	got, err := learnNonDecreasing(estimations, zerolog.New(os.Stdout))
 	assert.Nil(t, err)
 	assert.Equal(t, 30, len(got))
 	sort.SliceIsSorted(got, func(i, j int) bool {

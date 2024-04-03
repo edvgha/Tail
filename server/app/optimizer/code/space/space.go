@@ -2,7 +2,7 @@ package space
 
 import (
 	"encoding/json"
-	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog"
 	"math/rand"
 	"os"
 	"sort"
@@ -26,6 +26,7 @@ type Space struct {
 	wcMutex              sync.Mutex
 	ExplorationQty       atomic.Uint32
 	LastUpdateQty        atomic.Uint32
+	log                  zerolog.Logger
 }
 
 type Level struct {
@@ -60,7 +61,7 @@ func (s *Space) WC() LearnedEstimation {
 	return learnedEstimation
 }
 
-func (l *Level) exploit(floorPrice, price float64) (float64, error) {
+func (l *Level) exploit(floorPrice, price float64, log zerolog.Logger) (float64, error) {
 	left := -1
 	right := -1
 	min := l.Buckets[0].Lhs
@@ -85,7 +86,7 @@ func (l *Level) exploit(floorPrice, price float64) (float64, error) {
 		right += 1
 	}
 	if left < 0 || right >= len(l.Buckets) {
-		log.Debug().Msgf("out of bucket's range [%d, %d] #buckets %d", left, right, len(l.Buckets))
+		log.Error().Msgf("out of bucket's range [%d, %d] #buckets %d", left, right, len(l.Buckets))
 		return price, misc.UnfeasiblePriceError{Price: price, Min: min, Max: max}
 	}
 
@@ -151,7 +152,7 @@ type SpaceDesc struct {
 	MaxPrice    float64 `json:"max_price"`
 }
 
-func NewSpace(contextHash string, minPrice, maxPrice float64, cfg misc.Config) (*Space, error) {
+func NewSpace(contextHash string, minPrice, maxPrice float64, cfg misc.Config, log zerolog.Logger) (*Space, error) {
 	if minPrice > maxPrice {
 		return nil, misc.PriceRangeError{Min: minPrice, Max: maxPrice}
 	}
@@ -177,8 +178,9 @@ func NewSpace(contextHash string, minPrice, maxPrice float64, cfg misc.Config) (
 		Levels:               newLevels(minPrice, maxPrice, cfg),
 		IsFull:               false,
 		mutex:                sync.Mutex{},
-		explorationAlgorithm: InitUniformFlat(contextHash, minPrice, maxPrice, 2*cfg.BucketSize, cfg.DesiredExplorationSpeed),
+		explorationAlgorithm: InitUniformFlat(contextHash, minPrice, maxPrice, 2*cfg.BucketSize, cfg.DesiredExplorationSpeed, log),
 		wcMutex:              sync.Mutex{},
+		log:                  log,
 	}, nil
 }
 
@@ -259,7 +261,7 @@ func generateBucketBounds(lambda, minPrice, maxPrice float64, nBuckets int) []fl
 	return bounds
 }
 
-func LoadSpaces(cfg misc.Config) (map[string]*Space, error) {
+func LoadSpaces(cfg misc.Config, log zerolog.Logger) (map[string]*Space, error) {
 	file, err := os.Open(cfg.SpaceDescFile)
 	if err != nil {
 		log.Error().Msgf("Failed to open file %s", cfg.SpaceDescFile)
@@ -278,12 +280,12 @@ func LoadSpaces(cfg misc.Config) (map[string]*Space, error) {
 	spaces := make(map[string]*Space)
 	spaceCount := 0
 	for _, s := range spacesDesc {
-		spaces[s.ContextHash], err = NewSpace(s.ContextHash, s.MinPrice, s.MaxPrice, cfg)
+		spaces[s.ContextHash], err = NewSpace(s.ContextHash, s.MinPrice, s.MaxPrice, cfg, log)
 		if err != nil {
 			return nil, err
 		}
 		spaceCount += 1
 	}
-	log.Debug().Msgf("Description of spaces loaded successfully #%d", spaceCount)
+	log.Info().Msgf("Description of spaces loaded successfully #%d", spaceCount)
 	return spaces, nil
 }

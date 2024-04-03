@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/csv"
 	"fmt"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"os"
 	"os/exec"
@@ -12,9 +13,10 @@ import (
 )
 
 func (s *Space) BackgroundTask() {
+	// TODO magic numbers
 	go func() {
 		for {
-			if s.ExplorationQty.Load()-s.LastUpdateQty.Load() >= 100 {
+			if s.ExplorationQty.Load()-s.LastUpdateQty.Load() >= 200 {
 				s.Learn()
 			}
 			time.Sleep(10 * time.Second)
@@ -45,9 +47,9 @@ func (s *Space) Learn() {
 	for i, estimation := range estimations {
 		// TODO run in parallel
 		// TODO or in once for all
-		prs, err := learnNonDecreasing(estimation)
+		prs, err := learnNonDecreasing(estimation, s.log)
 		if err != nil {
-			log.Error().Msgf("Faild to learn for level %d", i)
+			s.log.Error().Msgf("Faild to learn for level %d", i)
 		}
 		for i := 0; i < len(estimation); i++ {
 			estimation[i].pr = prs[i]
@@ -59,7 +61,7 @@ func (s *Space) Learn() {
 		for j := 0; j < len(s.Levels[i].Buckets); j++ {
 			s.Levels[i].WinningCurve[j] = estimations[i][j].pr
 			if estimations[i][j].price < s.Levels[i].Buckets[j].Lhs || estimations[i][j].price > s.Levels[i].Buckets[j].Rhs {
-				log.Fatal().Msgf("inconsistency price %f in range [%f, %f]",
+				s.log.Fatal().Msgf("inconsistency price %f in range [%f, %f]",
 					estimations[i][j].price, s.Levels[i].Buckets[j].Lhs, s.Levels[i].Buckets[j].Rhs)
 			}
 		}
@@ -67,17 +69,17 @@ func (s *Space) Learn() {
 	s.wcMutex.Unlock()
 }
 
-func learnNonDecreasing(estimations Estimations) ([]float64, error) {
-	in, err := writeToCSV(estimations)
+func learnNonDecreasing(estimations Estimations, log zerolog.Logger) ([]float64, error) {
+	in, err := writeToCSV(estimations, log)
 	defer os.Remove(in.Name())
 	if err != nil {
 		return nil, err
 	}
 
-	return runLightGBM(in)
+	return runLightGBM(in, log)
 }
 
-func writeToCSV(estimations Estimations) (*os.File, error) {
+func writeToCSV(estimations Estimations, log zerolog.Logger) (*os.File, error) {
 	f, err := os.CreateTemp("", "regression.train")
 	if err != nil {
 		log.Error().Msg("failed to create tmp input data csv file")
@@ -100,15 +102,15 @@ func writeToCSV(estimations Estimations) (*os.File, error) {
 	return f, nil
 }
 
-func runLightGBM(inputData *os.File) ([]float64, error) {
+func runLightGBM(inputData *os.File, log zerolog.Logger) ([]float64, error) {
 	modelFile := "/tmp/LightGBM_model.txt"
 	outputData := "/tmp/output.txt"
-	trainConf, _, err := generateTrainConfig(inputData.Name(), modelFile)
+	trainConf, _, err := generateTrainConfig(inputData.Name(), modelFile, log)
 	defer os.Remove(trainConf.Name())
 	if err != nil {
 		return nil, err
 	}
-	predictConf, _, err := generatePredictConfig(inputData.Name(), outputData, modelFile)
+	predictConf, _, err := generatePredictConfig(inputData.Name(), outputData, modelFile, log)
 	defer os.Remove(predictConf.Name())
 	if err != nil {
 		return nil, err
@@ -123,7 +125,7 @@ func runLightGBM(inputData *os.File) ([]float64, error) {
 	return prs, err
 }
 
-func generateTrainConfig(inData, modelFile string) (*os.File, int, error) {
+func generateTrainConfig(inData, modelFile string, log zerolog.Logger) (*os.File, int, error) {
 	f, err := os.CreateTemp("", "train.conf")
 	if err != nil {
 		log.Error().Msg("failed to create tmp train config file")
@@ -158,7 +160,7 @@ func generateTrainConfig(inData, modelFile string) (*os.File, int, error) {
 	return f, n, nil
 }
 
-func generatePredictConfig(inData, outData, modelFile string) (*os.File, int, error) {
+func generatePredictConfig(inData, outData, modelFile string, log zerolog.Logger) (*os.File, int, error) {
 	f, err := os.CreateTemp("", "predict.conf")
 	if err != nil {
 		log.Error().Msg("failed to create tmp prediction config file")

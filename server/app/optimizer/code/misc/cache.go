@@ -26,7 +26,7 @@ func New[K comparable, V any]() *Cache[K, V] {
 	}
 
 	go func() {
-		for range time.Tick(1 * time.Second) {
+		for range time.Tick(2 * time.Millisecond) {
 			c.mu.Lock()
 
 			for key, item := range c.items {
