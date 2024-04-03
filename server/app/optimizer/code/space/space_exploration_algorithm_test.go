@@ -2,7 +2,9 @@ package space
 
 import (
 	"fmt"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
+	"os"
 	"reflect"
 	"testing"
 	"time"
@@ -34,7 +36,7 @@ func TestInitUniformFlat(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			iuf := InitUniformFlat(tt.args.context, tt.args.minPrice, tt.args.maxPrice, tt.args.nBins, tt.args.desiredFrequency)
+			iuf := InitUniformFlat(tt.args.context, tt.args.minPrice, tt.args.maxPrice, tt.args.nBins, tt.args.desiredFrequency, zerolog.New(os.Stdout))
 			assert.True(t, reflect.DeepEqual(iuf.bins, tt.want.bins))
 		})
 	}
@@ -92,7 +94,7 @@ func TestUniformFlat_findLeftmost(t *testing.T) {
 }
 
 func TestUniformFlat_sampleBin(t *testing.T) {
-	ea := InitUniformFlat("contextHash", 0.12, 3.79, 40, 1)
+	ea := InitUniformFlat("contextHash", 0.12, 3.79, 40, 1, zerolog.New(os.Stdout))
 	noOKN := 0
 	errN := 0
 	sampledBinsN := make([]int, 15)

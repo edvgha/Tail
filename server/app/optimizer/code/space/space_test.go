@@ -1,7 +1,9 @@
 package space
 
 import (
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
+	"os"
 	"reflect"
 	"tail.server/app/optimizer/code/misc"
 	"testing"
@@ -140,7 +142,7 @@ func TestNewSpace(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewSpace(tt.args.contextHash, tt.args.minPrice, tt.args.maxPrice, tt.args.cfg)
+			got, err := NewSpace(tt.args.contextHash, tt.args.minPrice, tt.args.maxPrice, tt.args.cfg, zerolog.New(os.Stdout))
 			if err != nil {
 				t.Errorf("%s", err.Error())
 			}
@@ -153,7 +155,7 @@ func TestNewSpace(t *testing.T) {
 
 func TestLoadSpaces(t *testing.T) {
 	cfg := misc.Config{SpaceDescFile: "spaces_desc.json", LevelSize: 10, BucketSize: 100, BufferSize: 100, Discount: 0.75}
-	spaces, err := LoadSpaces(cfg)
+	spaces, err := LoadSpaces(cfg, zerolog.New(os.Stdout))
 	if err != nil {
 		t.Errorf("%s", err.Error())
 	}
@@ -285,7 +287,7 @@ func TestLevel_exploit(t *testing.T) {
 				Buckets:      tt.fields.Buckets,
 				WinningCurve: tt.fields.WinningCurve,
 			}
-			got, err := l.exploit(tt.args.floorPrice, tt.args.price)
+			got, err := l.exploit(tt.args.floorPrice, tt.args.price, zerolog.New(os.Stdout))
 			assert.Nil(t, err)
 			assert.Equalf(t, tt.want, got, "exploit(%v, %v)", tt.args.floorPrice, tt.args.price)
 		})
@@ -302,7 +304,7 @@ func TestSpace_WC(t *testing.T) {
 		BucketSize:              10,
 		SpaceDescFile:           "file.txt",
 		CacheTTL:                1,
-	})
+	}, zerolog.New(os.Stdout))
 	assert.Nil(t, err)
 	le := s.WC()
 	assert.Equal(t, 3, len(le.Level))

@@ -15,6 +15,7 @@ class Animate:
         self.headers = {'Content-Type': 'application/json'}
         self.url = 'http://' + host + ':' + str(port)
         self.context = context
+        self.dist = self.context.max_price - self.context.min_price
         self.simulator = simulator
         self.log = log
         self.params = {'ctx': self.context.context_hash}
@@ -71,10 +72,26 @@ class Animate:
         self.ax_true.legend()
 
         self.ax_points.cla()
+        # plot line between best and predicted values
         for i in range(len(self.simulator.d)):
-            self.log.debug(f'true: {self.simulator.d[i][0]}, opt: {self.simulator.d[i][1]}, price: {self.simulator.d[i][2]}')
-            self.ax_points.scatter([self.simulator.d[i][0]], [0.0], alpha=1.0, color='green', marker='x', s=100)
-            self.ax_points.scatter([self.simulator.d[i][1]], [0.0], alpha=1.0, color='grey', marker='o', s=100)
+            x_1 = min(self.simulator.d[i][0], self.simulator.d[i][1])
+            x_2 = max(self.simulator.d[i][0], self.simulator.d[i][1])
+            color = 'grey'
+            line_style = 'dotted'
+            text = f"{format((x_2 - x_1) / self.dist, '.4f')}"
+            if ((x_2 - x_1) / self.dist) > 0.2:
+                color = 'red'
+                line_style = 'solid'
+                text = f"Opt dist: {format((x_2 - x_1), '.4f')}, Dist: {format(self.dist, '.4f')}"
+                self.log.debug(f"Opt dist {format((x_2 - x_1), '.4f')}, Dist: {format(self.dist, '.4f')}")
+                self.log.debug(f"range_min:{self.context.min_price}, "
+                               f"range_max:{self.context.max_price}, "
+                               f"true_best_price:{self.simulator.d[i][0]}, "
+                               f"opt_price:{self.simulator.d[i][1]}, "
+                               f"bid_price:{self.simulator.d[i][2]}")
+            self.ax_points.hlines(y=i*0.1, xmin=x_1, xmax=x_2, color=color, linestyles=line_style)
+            mid = (x_1 + x_2) / 2.0
+            self.ax_points.text(x=mid, y=i*0.1 + 0.02, s=text, ha='center')
         self.ax_points.legend()
 
         color = ['yellow', 'green', 'blue', 'grey', 'red']

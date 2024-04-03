@@ -1,7 +1,9 @@
 package space
 
 import (
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
+	"os"
 	"tail.server/app/optimizer/code/misc"
 	"testing"
 )
@@ -10,7 +12,7 @@ func TestSpace_sampleBuckets(t *testing.T) {
 	type args struct {
 		price float64
 	}
-	space, err := NewSpace("ctx", 0.2, 10.0, misc.Config{LevelSize: 3, BucketSize: 30, BufferSize: 10, Discount: 0.25, DesiredExplorationSpeed: 2})
+	space, err := NewSpace("ctx", 0.2, 10.0, misc.Config{LevelSize: 3, BucketSize: 30, BufferSize: 10, Discount: 0.25, DesiredExplorationSpeed: 2}, zerolog.New(os.Stdout))
 	assert.Nil(t, err)
 
 	tests := []struct {

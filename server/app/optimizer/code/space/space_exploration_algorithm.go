@@ -1,7 +1,7 @@
 package space
 
 import (
-	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog"
 	"math/rand"
 	"sort"
 	"sync"
@@ -12,6 +12,7 @@ import (
 type ExploreData struct {
 	ContextHash string
 	Buckets     []int
+	started     time.Time
 }
 
 type Algorithm interface {
@@ -24,9 +25,10 @@ type UniformFlat struct {
 	lastExplored []time.Time
 	desiredSpeed float64
 	mutex        *sync.Mutex
+	log          zerolog.Logger
 }
 
-func InitUniformFlat(context string, minPrice, maxPrice float64, nBins int, desiredSpeed float64) UniformFlat {
+func InitUniformFlat(context string, minPrice, maxPrice float64, nBins int, desiredSpeed float64, log zerolog.Logger) UniformFlat {
 	bins := make([]float64, nBins+1)
 	lastExplored := make([]time.Time, nBins)
 	bins[0] = minPrice
@@ -45,6 +47,7 @@ func InitUniformFlat(context string, minPrice, maxPrice float64, nBins int, desi
 		lastExplored: lastExplored,
 		desiredSpeed: desiredSpeed,
 		mutex:        &sync.Mutex{},
+		log:          log,
 	}
 }
 
@@ -70,7 +73,6 @@ func (uf UniformFlat) Call(floorPrice, price float64) (float64, bool, error) {
 		return 0.0, false, nil
 	}
 	newPrice := uf.sampleNewPrice(bin)
-	// log.Debug().Msgf("floorPrice: %v, price: %v, newPrice: %v", floorPrice, price, newPrice)
 	return newPrice, true, nil
 }
 
@@ -117,7 +119,7 @@ func (uf UniformFlat) sampleBin(l, r int) (int, bool, error) {
 
 func (uf UniformFlat) findLeftmost(price float64) (int, bool) {
 	if price <= uf.bins[0] || price > uf.bins[len(uf.bins)-1] {
-		log.Debug().Msgf("unfeasible price: %v$, for [%v$, %v$]", price, uf.bins[0], uf.bins[len(uf.bins)-1])
+		uf.log.Error().Msgf("unfeasible price: %v$, for [%v$, %v$]", price, uf.bins[0], uf.bins[len(uf.bins)-1])
 		return 0, false
 	}
 	return sort.SearchFloat64s(uf.bins, price) - 1, true

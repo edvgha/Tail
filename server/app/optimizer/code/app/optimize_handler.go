@@ -1,7 +1,6 @@
 package app
 
 import (
-	"github.com/rs/zerolog/log"
 	"hash/fnv"
 	"strconv"
 	"tail.server/app/optimizer/code/misc"
@@ -10,7 +9,7 @@ import (
 
 func optimize(request *Request) Response {
 	if !validate(request) {
-		log.Debug().Msgf("validation error: r_id %s", request.ID)
+		TLog.Error().Msgf("validation error: r_id %s", request.ID)
 		return Response{
 			OptimizedPrice: request.Price,
 			Status:         "validation error",
@@ -51,12 +50,12 @@ func explore(request *Request) (float64, bool, error) {
 
 	newPrice, data, OK, err := s.Explore(request.FloorPrice, request.Price)
 	if err != nil {
-		log.Debug().Msgf("explore ctx: %s error: %s", context, err.Error())
+		TLog.Error().Msgf("explore ctx: %s error: %s", context, err.Error())
 		return 0.0, false, err
 	}
 	s.ExplorationQty.Add(1)
 	if !OK {
-		log.Debug().Msgf("explore ctx: %s price: %f NO OK", context, request.Price)
+		TLog.Trace().Msgf("ctx: %s NO exploration for price: %f ", context, request.Price)
 		return 0.0, false, nil
 	}
 	data.ContextHash = context
@@ -69,7 +68,7 @@ func explore(request *Request) (float64, bool, error) {
 		return true
 	}
 	Cache.Set(request.ID, data, CacheTTL, cb)
-	// log.Debug().Msgf("explore: %s price: %f new_price: %f", context, request.Price, newPrice)
+	TLog.Trace().Msgf("explore: %s price: %f new_price: %f", context, request.Price, newPrice)
 	return newPrice, true, nil
 }
 
@@ -82,7 +81,7 @@ func exploit(request *Request) (float64, error) {
 
 	recommendedPrice, err := space.Exploit(request.FloorPrice, request.Price)
 	if err != nil {
-		log.Debug().Msgf("exploit ctx: %s error: %s", context, err.Error())
+		TLog.Error().Msgf("exploit ctx: %s error: %s", context, err.Error())
 		return request.Price, err
 	}
 	return recommendedPrice, nil
