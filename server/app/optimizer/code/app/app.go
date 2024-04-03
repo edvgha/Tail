@@ -17,10 +17,9 @@ import (
 )
 
 var (
-	Spaces   map[string]*space.Space
-	Cache    *misc.Cache[string, space.ExploreData]
-	CacheTTL time.Duration
-	TLog     zerolog.Logger
+	Spaces map[string]*space.Space
+	Cache  *misc.Cache[string, space.ExploreData]
+	TLog   zerolog.Logger
 )
 
 func initLogger(level string) zerolog.Logger {
@@ -59,7 +58,6 @@ func initLogger(level string) zerolog.Logger {
 
 func initGlobalVars(cfg misc.Config) {
 	Cache = misc.New[string, space.ExploreData]()
-	CacheTTL = time.Duration(cfg.CacheTTL) * time.Second
 
 	var err error
 	Spaces, err = space.LoadSpaces(cfg, TLog)
