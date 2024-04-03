@@ -48,7 +48,7 @@ func explore(request *Request) (float64, bool, error) {
 		return 0.0, false, misc.NoSpaceError{}
 	}
 
-	newPrice, data, OK, err := s.Explore(request.FloorPrice, request.Price)
+	newPrice, data, ttl, OK, err := s.Explore(request.FloorPrice, request.Price)
 	if err != nil {
 		TLog.Error().Msgf("explore ctx: %s error: %s", context, err.Error())
 		return 0.0, false, err
@@ -67,8 +67,8 @@ func explore(request *Request) (float64, bool, error) {
 		s.Update(data, false)
 		return true
 	}
-	Cache.Set(request.ID, data, CacheTTL, cb)
-	TLog.Trace().Msgf("explore: %s price: %f new_price: %f", context, request.Price, newPrice)
+	Cache.Set(request.ID, data, ttl, cb)
+	TLog.Trace().Msgf("explore: %s price: %f new_price: %f ttl: %v", context, request.Price, newPrice, ttl)
 	return newPrice, true, nil
 }
 

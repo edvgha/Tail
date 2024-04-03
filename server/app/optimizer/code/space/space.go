@@ -27,6 +27,7 @@ type Space struct {
 	ExplorationQty       atomic.Uint32
 	LastUpdateQty        atomic.Uint32
 	log                  zerolog.Logger
+	ttl                  *TTL
 }
 
 type Level struct {
@@ -181,6 +182,7 @@ func NewSpace(contextHash string, minPrice, maxPrice float64, cfg misc.Config, l
 		explorationAlgorithm: InitUniformFlat(contextHash, minPrice, maxPrice, 2*cfg.BucketSize, cfg.DesiredExplorationSpeed, log),
 		wcMutex:              sync.Mutex{},
 		log:                  log,
+		ttl:                  NewTTL(),
 	}, nil
 }
 
