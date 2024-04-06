@@ -5,4 +5,3 @@ export LOG_LEVEL=trace
 export LEVEL_SIZE=5
 export BUCKET_SIZE=30
 export SPACE_DESC_FILE=/home/edvard/Tail/server/app/optimizer/code/space/spaces_desc.json
-export CACHE_TTL=1
