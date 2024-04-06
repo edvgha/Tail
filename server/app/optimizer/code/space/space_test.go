@@ -303,7 +303,6 @@ func TestSpace_WC(t *testing.T) {
 		LevelSize:               3,
 		BucketSize:              10,
 		SpaceDescFile:           "file.txt",
-		CacheTTL:                1,
 	}, zerolog.New(os.Stdout))
 	assert.Nil(t, err)
 	le := s.WC()

@@ -8,5 +8,4 @@ type Config struct {
 	LevelSize               int     `envconfig:"LEVEL_SIZE" required:"true"`
 	BucketSize              int     `envconfig:"BUCKET_SIZE" required:"true"`
 	SpaceDescFile           string  `envconfig:"SPACE_DESC_FILE" required:"true"`
-	CacheTTL                int     `envconfig:"CACHE_TTL" required:"true"`
 }
