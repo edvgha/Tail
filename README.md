@@ -8,6 +8,6 @@ Online/adaptive learning bid optimizer
 3. make build
 4. /tmp/bin/a.out
 
-5. # Client
-6. pipenv shell
-7. python main.py
+# Client
+1. pipenv shell
+2. python main.py
