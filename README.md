@@ -2,8 +2,10 @@
 
 # Tail
 Online/adaptive learning bid optimizer
+
 To be optimal when participating to online biddings, we should be able to solve the following problem:
-What is the best price to bid? in other words what is the optimal price to bid?
+
+`What is the best price to bid?`
 
 This project is trying to answer to that question, for details pelase see doc.
 
