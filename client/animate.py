@@ -72,13 +72,14 @@ class Animate:
         self.ax_true.legend()
 
         self.ax_points.cla()
+        self.ax_points.set_title("how far bid price from optimal one in %")
         # plot line between best and predicted values
         for i in range(len(self.simulator.d)):
             x_1 = min(self.simulator.d[i][0], self.simulator.d[i][1])
             x_2 = max(self.simulator.d[i][0], self.simulator.d[i][1])
             color = 'grey'
             line_style = 'dotted'
-            text = f"{format((x_2 - x_1) / self.dist, '.4f')}"
+            text = f"Error {format((x_2 - x_1) / self.dist, '.2f')}%"
             if ((x_2 - x_1) / self.dist) > 0.2:
                 color = 'red'
                 line_style = 'solid'
@@ -96,6 +97,7 @@ class Animate:
 
         color = ['yellow', 'green', 'blue', 'grey', 'red']
         self.ax_space.cla()
+        self.ax_space.set_title("assembly of learned probabilities")
         for i in range(len(levels)):
             self.ax_space.plot(levels[i]['price'], levels[i]['pr'], color=color[i])
         self.ax_space.legend()
