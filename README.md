@@ -17,7 +17,7 @@ So task is reduced to estimate upstream winning curve as accurate as possible in
 2. For each discrete range esitmate Beta distribution.
 3. Unbiased estimate for the bid price winning probability on upstream for each discretized range is going to be the expectation of the estimated Beta distribution : α / (α + β)
 
-During inferencing we will calculate ArgMax(Bid Price * Probability to Win) for each discretized feasible bid price range and average them.
+During inferencing we will calculate ArgMax(Bid Price * Estimated Probability To Win) for each discretized feasible bid price range and average them.
 
 ![plot](./doc/learned.png)
 
