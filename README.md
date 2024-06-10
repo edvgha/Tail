@@ -12,14 +12,20 @@ if we knew upstream winning curve distribution we could estimate best bid price 
 bid price under the winning curve distribute. 
 So task is reduced to estimate upstream winning curve as accurate as possible in the short period of time and later adopt it in runtime.
 
-During participation on upstream auction (in AdTech) we are learning maximum expected value 
-under bid price distribution, which will provide best price to bid (do not overpay and do not underpay).
+## Estimation of winning price distribution on upstream auction
+1. Discretize feasible price range with exponential distribution for the different values of the λ parameters.
+2. For each discrete range esitmate Beta distribution.
+3. Unbiased estimate for the bid price winning probability on upstream for each discretized range is going to be the expectation of the estimated Beta distribution : α / (α + β)
+
+During inferencing we will calculate ARGMAX(Bid Price * Probability to Win) for each discretized feasible bid price range and average them.
+
+![plot](./doc/learned.png)
 
 ## Build and run
 ### Server
 ```
 make tidy
-```
+``` 
 ```
 make audit
 ```
