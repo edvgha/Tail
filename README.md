@@ -3,8 +3,10 @@
 # Tail
 Online/adaptive learning bid optimizer
 
-It's a key to be able to adopt your model very fast since auction winning price distribution 
-are changing very fast and classic offline learning models can't catch that change.
+It's a key to be able to adopt your bid optimizer very fast since upstream auction winning price 
+distribution are changing very fast and classic offline trained models can't catch that change in time.
+
+![plot](./doc/dist_change.png)
 
 During participation on upstream auction (in AdTech) we are learning maximum expected value 
 under bid price distribution, which will provide best price to bid (do not overpay and do not underpay).
