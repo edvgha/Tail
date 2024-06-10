@@ -3,11 +3,11 @@
 # Tail
 Online/adaptive learning bid optimizer
 
-To be optimal when participating to online biddings, we should be able to solve the following problem:
+It's a key to be able to adopt your model very fast since auction winning price distribution 
+are changing very fast and classic offline learning models can't catch that change.
 
-`What is the best price to bid?`
-
-This project is trying to answer to that question, for details pelase see doc.
+During participation on upstream auction (in AdTech) we are learning maximum expected value 
+under bid price distribution, which will provide best price to bid (do not overpay and do not underpay).
 
 ## Build and run
 ### Server
